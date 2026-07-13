@@ -128,13 +128,30 @@ def collect_all_offers(demo=False):
 
     all_offers = []
     for origin in ORIGINS:
+        origin_had_data = False
         for month in MONTHS_TO_QUERY:
             try:
                 offers = fetch_calendar_prices(origin, DESTINATION, month)
                 all_offers.extend(offers)
+                if offers:
+                    origin_had_data = True
             except Exception as e:
                 print(f"[aviso] Falló la búsqueda {origin}->{DESTINATION} ({month}): {e}")
-    return all_offers
+        if not origin_had_data:
+            print(f"[info] Sin datos en caché para {origin}->{DESTINATION} en tu ventana de fechas.")
+
+    # Deduplicar: la consulta de febrero y la de marzo se pisan en algunas
+    # fechas límite, así que nos quedamos con una sola entrada por
+    # (origin, depart_date, price, airline).
+    seen = set()
+    deduped = []
+    for o in all_offers:
+        key = (o.get("origin"), o.get("depart_date"), o.get("price"), o.get("airline"))
+        if key in seen:
+            continue
+        seen.add(key)
+        deduped.append(o)
+    return deduped
 
 
 # ---------------------------------------------------------------------------
