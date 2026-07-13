@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Portugueando — Radar de vuelos</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --azulejo-deep: #163A52;
+    --azulejo-mid: #3E7C9C;
+    --terracotta: #C1622D;
+    --cream: #F6F1E6;
+    --ink: #1B1B1B;
+    --sea-green: #2E6E5C;
+    --line: rgba(22, 58, 82, 0.18);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--cream);
+    color: var(--ink);
+    font-family: 'Inter', sans-serif;
+    padding: 40px 20px 80px;
+  }
+
+  .wrap { max-width: 880px; margin: 0 auto; }
+
+  header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    flex-wrap: wrap;
+    gap: 16px;
+    border-bottom: 2px solid var(--azulejo-deep);
+    padding-bottom: 18px;
+    margin-bottom: 28px;
+  }
+
+  .brand-eyebrow {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--terracotta);
+    margin: 0 0 6px;
+  }
+
+  h1 {
+    font-family: 'Fraunces', serif;
+    font-optical-sizing: auto;
+    font-weight: 600;
+    font-size: clamp(28px, 4vw, 40px);
+    margin: 0;
+    color: var(--azulejo-deep);
+    line-height: 1.05;
+  }
+
+  .meta {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    color: var(--azulejo-deep);
+    text-align: right;
+    line-height: 1.6;
+  }
+  .meta strong { color: var(--terracotta); }
+
+  .routes-strip {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 34px;
+  }
+  .route-chip {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    padding: 6px 12px;
+    border: 1px solid var(--azulejo-mid);
+    border-radius: 999px;
+    color: var(--azulejo-deep);
+    background: #fff;
+  }
+
+  .deals-heading {
+    font-family: 'Fraunces', serif;
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--azulejo-deep);
+    margin: 0 0 16px;
+  }
+
+  .empty {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    color: var(--azulejo-mid);
+    border: 1px dashed var(--azulejo-mid);
+    padding: 24px;
+    border-radius: 4px;
+    text-align: center;
+  }
+
+  .deal-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 22px;
+  }
+
+  /* ---- Boarding pass card ---- */
+  .pass {
+    position: relative;
+    display: grid;
+    grid-template-columns: 1fr 150px;
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 10px 24px rgba(22,58,82,0.10);
+    overflow: hidden;
+  }
+
+  .pass.best::before {
+    content: 'MEJOR PRECIO';
+    position: absolute;
+    top: 14px;
+    right: -34px;
+    background: var(--terracotta);
+    color: #fff;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    padding: 4px 40px;
+    transform: rotate(38deg);
+    z-index: 2;
+  }
+
+  .pass-main {
+    padding: 22px 26px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .route-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .airport {
+    font-family: 'Fraunces', serif;
+    font-weight: 700;
+    font-size: 30px;
+    color: var(--azulejo-deep);
+  }
+
+  .plane-track {
+    flex: 1;
+    position: relative;
+    height: 1px;
+    background: var(--line);
+  }
+  .plane-track::after {
+    content: '✈';
+    position: absolute;
+    top: -9px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: var(--azulejo-mid);
+    font-size: 14px;
+  }
+
+  .flight-facts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 18px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    color: var(--azulejo-deep);
+  }
+  .flight-facts span.label {
+    display: block;
+    color: var(--azulejo-mid);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 3px;
+  }
+
+  .verify-link {
+    align-self: flex-start;
+    margin-top: 4px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    color: var(--sea-green);
+    text-decoration: none;
+    border-bottom: 1px solid var(--sea-green);
+    padding-bottom: 1px;
+  }
+  .verify-link:hover { opacity: 0.7; }
+
+  /* Perforation + stub */
+  .pass-stub {
+    position: relative;
+    background: var(--azulejo-deep);
+    color: #fff;
+    padding: 22px 18px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    gap: 6px;
+  }
+  .pass-stub::before {
+    content: '';
+    position: absolute;
+    left: -8px; top: 50%;
+    transform: translateY(-50%);
+    width: 16px; height: 16px;
+    background: var(--cream);
+    border-radius: 50%;
+  }
+  .perf {
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    border-left: 2px dashed rgba(255,255,255,0.35);
+  }
+
+  .stub-price {
+    font-family: 'Fraunces', serif;
+    font-weight: 700;
+    font-size: 30px;
+    line-height: 1;
+  }
+  .stub-per {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    opacity: 0.8;
+  }
+  .stub-airline {
+    margin-top: 8px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    background: rgba(255,255,255,0.12);
+    padding: 3px 9px;
+    border-radius: 999px;
+  }
+
+  footer {
+    margin-top: 40px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--azulejo-mid);
+    line-height: 1.7;
+    border-top: 1px solid var(--line);
+    padding-top: 16px;
+  }
+
+  @media (max-width: 560px) {
+    .pass { grid-template-columns: 1fr; }
+    .pass-stub { flex-direction: row; justify-content: space-between; padding: 14px 18px; }
+    .pass-stub::before { display: none; }
+    .perf { left: 0; right: 0; top: 0; bottom: auto; border-left: none; border-top: 2px dashed rgba(255,255,255,0.35); }
+    .meta { text-align: left; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div>
+      <p class="brand-eyebrow">Portugueando · Radar de vuelos</p>
+      <h1>Porto / Lisboa / Madrid / Barcelona → Buenos Aires</h1>
+    </div>
+    <div class="meta" id="meta"></div>
+  </header>
+
+  <div class="routes-strip" id="routes"></div>
+
+  <h2 class="deals-heading">Ofertas candidatas de hoy</h2>
+  <div id="deals" class="deal-grid"></div>
+
+  <footer>
+    Los precios son indicativos (Travelpayouts Data API, caché de hasta 7 días) y no confirman equipaje incluido.
+    Verificá siempre el precio final con bolso + carry-on + 2 valijas de 23kg antes de comprar.
+    Fernando & Rocío · Porto → Buenos Aires, feb–mar 2027.
+  </footer>
+</div>
+
+<script>
+  // Datos de ejemplo — en producción esto se reemplaza por el contenido real de results.json
+  // En producción (GitHub Pages) esto lee results.json, que el workflow
+  // de GitHub Actions actualiza todos los días. Si falla (ej. abriendo el
+  // archivo directo desde tu compu, sin servidor), usa datos de ejemplo.
+  const DEMO_FALLBACK = {
+    "generated_at": "2026-07-12",
+    "max_price_eur": 500,
+    "passengers": 2,
+    "total_offers_checked": 5,
+    "any_under_target": true,
+    "deals": [
+      {"origin":"LIS","destination":"BUE","price":479,"airline":"ET","departure_at":"2027-02-21T14:05:00Z","return_at":"2027-03-30T22:10:00-03:00","stops":1,"above_target":false,"verify_link":"https://www.aviasales.com/search/LIS270221BUE1"},
+      {"origin":"MAD","destination":"BUE","price":799,"airline":"AC","departure_at":"2027-02-17T13:25:00+01:00","return_at":"2027-02-28T16:45:00-03:00","stops":2,"above_target":true,"verify_link":"https://www.aviasales.com/search/MAD270217BUE1"},
+      {"origin":"MAD","destination":"BUE","price":831,"airline":"AA","departure_at":"2027-02-26T16:20:00+01:00","return_at":"2027-03-06T23:35:00-03:00","stops":1,"above_target":true,"verify_link":"https://www.aviasales.com/search/MAD270226BUE1"}
+    ]
+  };
+
+  const ROUTES = ["OPO", "LIS", "MAD", "BCN"];
+  const fmtDate = iso => iso ? new Date(iso).toLocaleDateString('es-AR', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
+
+  function render(DATA) {
+    document.getElementById('meta').innerHTML =
+      `Actualizado: <strong>${DATA.generated_at}</strong><br>${DATA.total_offers_checked} vuelos revisados · umbral €${DATA.max_price_eur}/persona`;
+
+    document.getElementById('routes').innerHTML = ROUTES.map(r => `<span class="route-chip">${r} → BUE</span>`).join('');
+
+    const dealsEl = document.getElementById('deals');
+    const headingEl = document.querySelector('.deals-heading');
+
+    if (!DATA.deals.length) {
+      dealsEl.innerHTML = `<div class="empty">Sin datos en caché para tus rutas hoy. Seguimos monitoreando todos los días.</div>`;
+      return;
+    }
+    if (!DATA.any_under_target) {
+      headingEl.textContent = 'Todavía nada bajo tu objetivo — así viene la tendencia';
+    }
+    dealsEl.innerHTML = DATA.deals.map((d, i) => `
+      <div class="pass ${i === 0 && !d.above_target ? 'best' : ''}">
+        <div class="pass-main">
+          <div class="route-row">
+            <span class="airport">${d.origin}</span>
+            <div class="plane-track"></div>
+            <span class="airport">${d.destination}</span>
+          </div>
+          <div class="flight-facts">
+            <div><span class="label">Salida</span>${fmtDate(d.departure_at)}</div>
+            <div><span class="label">Vuelta</span>${d.return_at ? fmtDate(d.return_at) + ' (no se usa)' : 'Solo ida'}</div>
+            <div><span class="label">Escalas</span>${d.stops === 0 ? 'Directo' : d.stops + (d.stops === 1 ? ' escala' : ' escalas')}</div>
+          </div>
+          <a class="verify-link" href="${d.verify_link}" target="_blank" rel="noopener">Verificar precio y equipaje →</a>
+        </div>
+        <div class="pass-stub">
+          <div class="perf"></div>
+          <div class="stub-price">€${d.price}</div>
+          <div class="stub-per">${d.above_target ? 'arriba del objetivo' : 'por persona'}</div>
+          <div class="stub-airline">${d.airline}</div>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  fetch('results.json', { cache: 'no-store' })
+    .then(r => { if (!r.ok) throw new Error('no results.json yet'); return r.json(); })
+    .then(render)
+    .catch(() => render(DEMO_FALLBACK));
+</script>
+</body>
+</html>
