@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-16",
+  "generated_at": "2026-07-17",
   "max_price_eur": 500,
   "passengers": 2,
   "total_offers_checked": 3,
@@ -19,17 +19,6 @@
     {
       "origin": "MAD",
       "destination": "BUE",
-      "price": 833,
-      "airline": "AA",
-      "departure_at": "2027-02-26T16:20:00+01:00",
-      "return_at": "2027-03-06T23:35:00-03:00",
-      "stops": 1,
-      "above_target": true,
-      "verify_link": "https://www.aviasales.com/search/MAD270226BUE1"
-    },
-    {
-      "origin": "MAD",
-      "destination": "BUE",
       "price": 844,
       "airline": "PU",
       "departure_at": "2027-03-01T23:10:00+01:00",
@@ -37,6 +26,17 @@
       "stops": 0,
       "above_target": true,
       "verify_link": "https://www.aviasales.com/search/MAD270301BUE1"
+    },
+    {
+      "origin": "MAD",
+      "destination": "BUE",
+      "price": 858,
+      "airline": "AA",
+      "departure_at": "2027-02-26T16:20:00+01:00",
+      "return_at": "2027-03-06T23:35:00-03:00",
+      "stops": 1,
+      "above_target": true,
+      "verify_link": "https://www.aviasales.com/search/MAD270226BUE1"
     }
   ]
 }
