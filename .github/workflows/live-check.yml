@@ -1,0 +1,31 @@
+name: Chequeo en vivo Google Flights
+
+on:
+  schedule:
+    - cron: "0 9 * * 1,4"   # lunes y jueves, 9am UTC
+  workflow_dispatch:
+
+jobs:
+  chequeo-vivo:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install requests
+      - run: python serpapi_live_check.py
+        env:
+          SERPAPI_KEY: ${{ secrets.SERPAPI_KEY }}
+          EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
+          EMAIL_TO: ${{ secrets.EMAIL_TO }}
+          EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
+      - name: Guardar resultados en el repo
+        run: |
+          git config user.name "flight-bot"
+          git config user.email "bot@portugueando.local"
+          git add live_results.json
+          git commit -m "Actualiza chequeo en vivo" || echo "sin cambios"
+          git push
