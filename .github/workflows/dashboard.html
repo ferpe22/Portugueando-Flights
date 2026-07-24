@@ -375,7 +375,27 @@
       el.innerHTML = `<div class="empty">Nada confirmado en vivo bajo €${DATA.max_price_eur} en el último chequeo (${DATA.generated_at}).</div>`;
       return;
     }
-    el.innerHTML = DATA.deals.map((d, i) => `
+
+    // Agrupar por (origen, destino, aerolínea, precio) — mismas tarifas
+    // fijas aparecen en varias fechas de la muestra, las juntamos en una
+    // sola tarjeta con la lista de fechas disponibles.
+    const groups = {};
+    DATA.deals.forEach(d => {
+      const key = [d.origin, d.destination, d.airline, d.price_per_person].join('|');
+      if (!groups[key]) {
+        groups[key] = { ...d, dates: [] };
+      }
+      groups[key].dates.push({ date: d.depart_date, time: d.departure_at, link: d.verify_link });
+    });
+    const grouped = Object.values(groups).sort((a, b) => a.price_per_person - b.price_per_person);
+
+    el.innerHTML = grouped.map((d, i) => {
+      const timeOfDay = d.dates[0].time ? d.dates[0].time.split(' ')[1] : '';
+      const datesList = d.dates
+        .sort((a, b) => a.date.localeCompare(b.date))
+        .map(x => `<a href="${x.link}" target="_blank" rel="noopener">${fmtDate(x.date)}</a>`)
+        .join(', ');
+      return `
       <div class="pass ${i === 0 ? 'best' : ''}">
         <div class="pass-main">
           <div class="route-row">
@@ -384,11 +404,14 @@
             <span class="airport">${d.destination}</span>
           </div>
           <div class="flight-facts">
-            <div><span class="label">Salida</span>${fmtDate(d.departure_at)}</div>
+            <div><span class="label">Horario</span>${timeOfDay || '—'}</div>
             <div><span class="label">Escalas</span>${d.stops === 0 ? 'Directo' : d.stops + (d.stops === 1 ? ' escala' : ' escalas')}</div>
             <div><span class="label">Fuente</span>${d.source}</div>
           </div>
-          <a class="verify-link" href="${d.verify_link}" target="_blank" rel="noopener">Ver en Google Flights →</a>
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--azulejo-deep);margin-top:4px;">
+            <span class="label" style="display:block;color:var(--azulejo-mid);font-size:10px;text-transform:uppercase;margin-bottom:3px;">Disponible en (clic para verificar)</span>
+            ${datesList}
+          </div>
         </div>
         <div class="pass-stub">
           <div class="perf"></div>
@@ -397,7 +420,8 @@
           <div class="stub-airline">${d.airline}</div>
         </div>
       </div>
-    `).join('');
+    `;
+    }).join('');
   }
 </script>
 </body>
