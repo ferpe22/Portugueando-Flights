@@ -115,7 +115,7 @@ def fetch_live_price(origin, destination, outbound_date, retries=1):
         if not legs:
             continue
         first_leg = legs[0]
-        key = (first_leg.get("flight_number"), first_leg.get("departure_airport", {}).get("time"), total_price)
+        key = (first_leg.get("departure_airport", {}).get("time"), first_leg.get("airline"), total_price)
         if key in seen:
             continue
         seen.add(key)
@@ -168,7 +168,18 @@ def collect_all(demo=False):
             except Exception as e:
                 print(f"    -> [aviso] Falló: {e}")
     print(f"[info] {calls_made} consultas hechas a SerpApi en esta corrida.")
-    return all_offers
+
+    # Limpieza final por las dudas, por si el mismo vuelo aparece en más de
+    # una llamada (ej. fechas de muestra muy cercanas).
+    seen = set()
+    deduped = []
+    for o in all_offers:
+        key = (o["origin"], o["destination"], o["departure_at"], o["airline"], o["price_per_person"])
+        if key in seen:
+            continue
+        seen.add(key)
+        deduped.append(o)
+    return deduped
 
 
 def filter_deals(offers, max_price=MAX_PRICE_EUR_PER_PERSON):
