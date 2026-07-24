@@ -281,7 +281,10 @@
 
   <div class="routes-strip" id="routes"></div>
 
-  <h2 class="deals-heading">Ofertas candidatas de hoy</h2>
+  <h2 class="deals-heading" id="live-heading">🔴 Verificado en vivo (Google Flights)</h2>
+  <div id="live-deals" class="deal-grid" style="margin-bottom:40px;"></div>
+
+  <h2 class="deals-heading">Ofertas candidatas (tendencia diaria)</h2>
   <div id="deals" class="deal-grid"></div>
 
   <footer>
@@ -357,6 +360,45 @@
     .then(r => { if (!r.ok) throw new Error('no results.json yet'); return r.json(); })
     .then(render)
     .catch(() => render(DEMO_FALLBACK));
+
+  fetch('live_results.json', { cache: 'no-store' })
+    .then(r => { if (!r.ok) throw new Error('no live_results.json yet'); return r.json(); })
+    .then(renderLive)
+    .catch(() => {
+      document.getElementById('live-deals').innerHTML =
+        `<div class="empty">Todavía no corrió el chequeo en vivo (corre lunes y jueves). El primer resultado va a aparecer acá.</div>`;
+    });
+
+  function renderLive(DATA) {
+    const el = document.getElementById('live-deals');
+    if (!DATA.deals || !DATA.deals.length) {
+      el.innerHTML = `<div class="empty">Nada confirmado en vivo bajo €${DATA.max_price_eur} en el último chequeo (${DATA.generated_at}).</div>`;
+      return;
+    }
+    el.innerHTML = DATA.deals.map((d, i) => `
+      <div class="pass ${i === 0 ? 'best' : ''}">
+        <div class="pass-main">
+          <div class="route-row">
+            <span class="airport">${d.origin}</span>
+            <div class="plane-track"></div>
+            <span class="airport">${d.destination}</span>
+          </div>
+          <div class="flight-facts">
+            <div><span class="label">Salida</span>${fmtDate(d.departure_at)}</div>
+            <div><span class="label">Escalas</span>${d.stops === 0 ? 'Directo' : d.stops + (d.stops === 1 ? ' escala' : ' escalas')}</div>
+            <div><span class="label">Fuente</span>${d.source}</div>
+          </div>
+          <a class="verify-link" href="${d.verify_link}" target="_blank" rel="noopener">Ver en Google Flights →</a>
+        </div>
+        <div class="pass-stub">
+          <div class="perf"></div>
+          <div class="stub-price">€${d.price_per_person}</div>
+          <div class="stub-per">por persona · en vivo</div>
+          <div class="stub-airline">${d.airline}</div>
+        </div>
+      </div>
+    `).join('');
+  }
 </script>
 </body>
 </html>
