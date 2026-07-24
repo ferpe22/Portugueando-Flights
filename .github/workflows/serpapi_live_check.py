@@ -66,7 +66,7 @@ def sample_dates():
 # BÚSQUEDA
 # ---------------------------------------------------------------------------
 
-def fetch_live_price(origin, destination, outbound_date):
+def fetch_live_price(origin, destination, outbound_date, retries=1):
     """Una consulta = un crédito de SerpApi. Solo ida (type=2)."""
     import requests
 
@@ -78,12 +78,24 @@ def fetch_live_price(origin, destination, outbound_date):
         "type": "2",          # solo ida
         "currency": CURRENCY,
         "adults": PASSENGERS,
+        "bags": 1,             # 1 carry-on por pasajero (SerpApi solo soporta carry-on, no valija despachada)
         "hl": "es",
         "api_key": SERPAPI_KEY,
     }
-    resp = requests.get(SERPAPI_URL, params=params, timeout=30)
-    resp.raise_for_status()
-    data = resp.json()
+
+    last_error = None
+    for attempt in range(retries + 1):
+        try:
+            resp = requests.get(SERPAPI_URL, params=params, timeout=45)
+            resp.raise_for_status()
+            data = resp.json()
+            break
+        except Exception as e:
+            last_error = e
+            if attempt < retries:
+                print(f"    -> timeout/error, reintentando...")
+                continue
+            raise last_error
 
     if "error" in data:
         raise RuntimeError(data["error"])
@@ -91,6 +103,9 @@ def fetch_live_price(origin, destination, outbound_date):
     google_flights_url = data.get("search_metadata", {}).get("google_flights_url", "")
     all_flights = data.get("best_flights", []) + data.get("other_flights", [])
 
+    # Deduplicar: Google Flights suele repetir el mismo itinerario ofrecido
+    # por varias agencias distintas (Gotogate, etc.) con el mismo precio.
+    seen = set()
     offers = []
     for f in all_flights:
         total_price = f.get("price")
@@ -100,6 +115,10 @@ def fetch_live_price(origin, destination, outbound_date):
         if not legs:
             continue
         first_leg = legs[0]
+        key = (first_leg.get("flight_number"), first_leg.get("departure_airport", {}).get("time"), total_price)
+        if key in seen:
+            continue
+        seen.add(key)
         offers.append({
             "origin": origin,
             "destination": destination,
@@ -137,14 +156,17 @@ def collect_all(demo=False):
     all_offers = []
     dates = sample_dates()
     calls_made = 0
+    total_calls = len(ORIGINS) * len(dates)
     for origin in ORIGINS:
         for d in dates:
+            calls_made += 1
+            print(f"[{calls_made}/{total_calls}] Consultando {origin} -> {DESTINATION} para {d}...")
             try:
                 offers = fetch_live_price(origin, DESTINATION, d)
                 all_offers.extend(offers)
-                calls_made += 1
+                print(f"    -> {len(offers)} vuelo(s) encontrados.")
             except Exception as e:
-                print(f"[aviso] Falló {origin}->{DESTINATION} {d}: {e}")
+                print(f"    -> [aviso] Falló: {e}")
     print(f"[info] {calls_made} consultas hechas a SerpApi en esta corrida.")
     return all_offers
 
