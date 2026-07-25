@@ -1,21 +1,10 @@
 {
-  "generated_at": "2026-07-24",
+  "generated_at": "2026-07-25",
   "max_price_eur": 500,
   "passengers": 2,
-  "total_offers_checked": 5,
+  "total_offers_checked": 4,
   "any_under_target": false,
   "deals": [
-    {
-      "origin": "MAD",
-      "destination": "BUE",
-      "price": 814,
-      "airline": "AA",
-      "departure_at": "2027-03-04T13:15:00+01:00",
-      "return_at": "2027-03-21T21:10:00-03:00",
-      "stops": 2,
-      "above_target": true,
-      "verify_link": "https://www.aviasales.com/search/MAD270304BUE1"
-    },
     {
       "origin": "MAD",
       "destination": "BUE",
