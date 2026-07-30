@@ -1,8 +1,8 @@
 {
-  "generated_at": "2026-07-29",
+  "generated_at": "2026-07-30",
   "max_price_eur": 500,
   "passengers": 2,
-  "total_offers_checked": 6,
+  "total_offers_checked": 7,
   "any_under_target": false,
   "deals": [
     {
@@ -50,15 +50,15 @@
       "verify_link": "https://www.aviasales.com/search/MAD270222BUE1"
     },
     {
-      "origin": "OPO",
+      "origin": "MAD",
       "destination": "BUE",
-      "price": 1089,
-      "airline": "VY",
-      "departure_at": "2027-03-09T21:55:00Z",
-      "return_at": "2027-03-26T18:20:00-03:00",
-      "stops": 2,
+      "price": 1051,
+      "airline": "PU",
+      "departure_at": "2027-02-20T23:10:00+01:00",
+      "return_at": "2027-03-20T14:25:00-03:00",
+      "stops": 0,
       "above_target": true,
-      "verify_link": "https://www.aviasales.com/search/OPO270309BUE1"
+      "verify_link": "https://www.aviasales.com/search/MAD270220BUE1"
     }
   ]
 }
