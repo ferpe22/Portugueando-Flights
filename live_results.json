@@ -1,8 +1,20 @@
 {
-  "generated_at": "2026-07-27",
+  "generated_at": "2026-07-30",
   "max_price_eur": 500,
   "source": "Google Flights (SerpApi, en vivo)",
   "deals": [
+    {
+      "origin": "LIS",
+      "destination": "EZE",
+      "depart_date": "2027-02-22",
+      "price_per_person": 462.0,
+      "airline": "Gol",
+      "departure_at": "2027-02-22 23:30",
+      "stops": 1,
+      "total_duration_min": 1745,
+      "verify_link": "https://www.google.com/travel/flights?hl=es&gl=us&curr=EUR&tfs=CBwQAhoeEgoyMDI3LTAyLTIyagcIARIDTElTcgcIARIDRVpFQAFAAUgBcAGYAQI&tfu=EgIIAQ",
+      "source": "Google Flights (en vivo)"
+    },
     {
       "origin": "LIS",
       "destination": "EZE",
@@ -30,24 +42,12 @@
     {
       "origin": "LIS",
       "destination": "EZE",
-      "depart_date": "2027-03-15",
-      "price_per_person": 462.0,
-      "airline": "Gol",
-      "departure_at": "2027-03-15 23:30",
-      "stops": 1,
-      "total_duration_min": 1745,
-      "verify_link": "https://www.google.com/travel/flights?hl=es&gl=us&curr=EUR&tfs=CBwQAhoeEgoyMDI3LTAzLTE1agcIARIDTElTcgcIARIDRVpFQAFAAUgBcAGYAQI&tfu=EgIIAQ",
-      "source": "Google Flights (en vivo)"
-    },
-    {
-      "origin": "LIS",
-      "destination": "EZE",
       "depart_date": "2027-02-22",
       "price_per_person": 481.5,
       "airline": "Gol",
       "departure_at": "2027-02-22 23:30",
       "stops": 1,
-      "total_duration_min": 1745,
+      "total_duration_min": 920,
       "verify_link": "https://www.google.com/travel/flights?hl=es&gl=us&curr=EUR&tfs=CBwQAhoeEgoyMDI3LTAyLTIyagcIARIDTElTcgcIARIDRVpFQAFAAUgBcAGYAQI&tfu=EgIIAQ",
       "source": "Google Flights (en vivo)"
     },
