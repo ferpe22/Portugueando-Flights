@@ -30,7 +30,7 @@
     {
       "origin": "MAD",
       "destination": "BUE",
-      "price": 714,
+      "price": 715,
       "airline": "PU",
       "departure_at": "2027-02-19T23:10:00+01:00",
       "return_at": "2027-02-28T14:25:00-03:00",
