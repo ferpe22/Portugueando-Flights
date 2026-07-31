@@ -102,6 +102,24 @@
     text-align: center;
   }
 
+  .chart-card {
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 10px 24px rgba(22,58,82,0.10);
+    padding: 22px 26px;
+  }
+  .chart-card svg { display: block; width: 100%; height: auto; }
+  .chart-legend {
+    display: flex;
+    gap: 18px;
+    margin-top: 10px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--azulejo-deep);
+  }
+  .chart-legend span { display: flex; align-items: center; gap: 6px; }
+  .chart-legend .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+
   .deal-grid {
     display: grid;
     grid-template-columns: 1fr;
@@ -281,6 +299,9 @@
 
   <div class="routes-strip" id="routes"></div>
 
+  <h2 class="deals-heading">Tendencia de precio (últimas corridas)</h2>
+  <div id="history-chart" style="margin-bottom:40px;"></div>
+
   <h2 class="deals-heading" id="live-heading">🔴 Verificado en vivo (Google Flights)</h2>
   <div id="live-deals" class="deal-grid" style="margin-bottom:40px;"></div>
 
@@ -375,7 +396,27 @@
       el.innerHTML = `<div class="empty">Nada confirmado en vivo bajo €${DATA.max_price_eur} en el último chequeo (${DATA.generated_at}).</div>`;
       return;
     }
-    el.innerHTML = DATA.deals.map((d, i) => `
+
+    // Agrupar por (origen, destino, aerolínea, precio) — mismas tarifas
+    // fijas aparecen en varias fechas de la muestra, las juntamos en una
+    // sola tarjeta con la lista de fechas disponibles.
+    const groups = {};
+    DATA.deals.forEach(d => {
+      const key = [d.origin, d.destination, d.airline, d.price_per_person].join('|');
+      if (!groups[key]) {
+        groups[key] = { ...d, dates: [] };
+      }
+      groups[key].dates.push({ date: d.depart_date, time: d.departure_at, link: d.verify_link });
+    });
+    const grouped = Object.values(groups).sort((a, b) => a.price_per_person - b.price_per_person);
+
+    el.innerHTML = grouped.map((d, i) => {
+      const timeOfDay = d.dates[0].time ? d.dates[0].time.split(' ')[1] : '';
+      const datesList = d.dates
+        .sort((a, b) => a.date.localeCompare(b.date))
+        .map(x => `<a href="${x.link}" target="_blank" rel="noopener">${fmtDate(x.date)}</a>`)
+        .join(', ');
+      return `
       <div class="pass ${i === 0 ? 'best' : ''}">
         <div class="pass-main">
           <div class="route-row">
@@ -384,11 +425,14 @@
             <span class="airport">${d.destination}</span>
           </div>
           <div class="flight-facts">
-            <div><span class="label">Salida</span>${fmtDate(d.departure_at)}</div>
+            <div><span class="label">Horario</span>${timeOfDay || '—'}</div>
             <div><span class="label">Escalas</span>${d.stops === 0 ? 'Directo' : d.stops + (d.stops === 1 ? ' escala' : ' escalas')}</div>
             <div><span class="label">Fuente</span>${d.source}</div>
           </div>
-          <a class="verify-link" href="${d.verify_link}" target="_blank" rel="noopener">Ver en Google Flights →</a>
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--azulejo-deep);margin-top:4px;">
+            <span class="label" style="display:block;color:var(--azulejo-mid);font-size:10px;text-transform:uppercase;margin-bottom:3px;">Disponible en (clic para verificar)</span>
+            ${datesList}
+          </div>
         </div>
         <div class="pass-stub">
           <div class="perf"></div>
@@ -397,7 +441,61 @@
           <div class="stub-airline">${d.airline}</div>
         </div>
       </div>
-    `).join('');
+    `;
+    }).join('');
+  }
+
+  fetch('history.json', { cache: 'no-store' })
+    .then(r => { if (!r.ok) throw new Error('no history.json yet'); return r.json(); })
+    .then(renderHistoryChart)
+    .catch(() => {
+      document.getElementById('history-chart').innerHTML =
+        `<div class="empty">Todavía no hay historial suficiente. Va a aparecer acá a medida que pasen los días.</div>`;
+    });
+
+  function renderHistoryChart(history) {
+    const el = document.getElementById('history-chart');
+    const points = (history || []).filter(h => h.cheapest_overall != null);
+    if (points.length < 2) {
+      el.innerHTML = `<div class="empty">Todavía no hay suficientes días de historial para graficar la tendencia (necesita al menos 2).</div>`;
+      return;
+    }
+
+    const W = 800, H = 260, padL = 50, padR = 20, padT = 20, padB = 30;
+    const prices = points.map(p => p.cheapest_overall);
+    const minP = Math.min(...prices, 500) - 20;
+    const maxP = Math.max(...prices, 500) + 20;
+    const x = i => padL + (i / (points.length - 1)) * (W - padL - padR);
+    const y = p => padT + (1 - (p - minP) / (maxP - minP)) * (H - padT - padB);
+
+    const linePath = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${x(i).toFixed(1)} ${y(p.cheapest_overall).toFixed(1)}`).join(' ');
+    const targetY = y(500);
+
+    const dots = points.map((p, i) => `<circle cx="${x(i).toFixed(1)}" cy="${y(p.cheapest_overall).toFixed(1)}" r="3.5" fill="var(--terracotta)" />`).join('');
+
+    // Mostrar fecha solo cada N puntos para no amontonar etiquetas
+    const labelEvery = Math.ceil(points.length / 6);
+    const labels = points.map((p, i) => {
+      if (i % labelEvery !== 0 && i !== points.length - 1) return '';
+      const d = new Date(p.date);
+      const label = d.toLocaleDateString('es-AR', { day: '2-digit', month: 'short' });
+      return `<text x="${x(i).toFixed(1)}" y="${H - 8}" font-size="10" font-family="IBM Plex Mono, monospace" fill="var(--azulejo-mid)" text-anchor="middle">${label}</text>`;
+    }).join('');
+
+    el.innerHTML = `
+      <svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">
+        <line x1="${padL}" y1="${targetY.toFixed(1)}" x2="${W - padR}" y2="${targetY.toFixed(1)}" stroke="var(--sea-green)" stroke-width="1.5" stroke-dasharray="4 4" />
+        <text x="${W - padR}" y="${(targetY - 6).toFixed(1)}" font-size="10" font-family="IBM Plex Mono, monospace" fill="var(--sea-green)" text-anchor="end">objetivo €500</text>
+        <path d="${linePath}" fill="none" stroke="var(--azulejo-deep)" stroke-width="2" />
+        ${dots}
+        ${labels}
+      </svg>
+      <div class="chart-legend">
+        <span><span class="dot" style="background:var(--azulejo-deep)"></span>Precio más barato encontrado ese día</span>
+        <span><span class="dot" style="background:var(--sea-green)"></span>Tu objetivo (€500)</span>
+      </div>
+    `;
+    document.getElementById('history-chart').className = 'chart-card';
   }
 </script>
 </body>

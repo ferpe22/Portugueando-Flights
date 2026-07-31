@@ -26,7 +26,7 @@ from email.mime.multipart import MIMEMultipart
 # CONFIGURACIÓN — ajustá esto a tu gusto
 # ---------------------------------------------------------------------------
 
-ORIGINS = ["OPO", "LIS", "MAD", "BCN"]   # Porto, Lisboa, Madrid, Barcelona
+ORIGINS = ["OPO", "LIS", "MAD", "BCN", "VGO", "SCQ"]   # Porto, Lisboa, Madrid, Barcelona, Vigo, Santiago de Compostela
 DESTINATION = "BUE"                       # Código de ciudad que agrupa EZE + AEP
 
 # Meses a barrer con el endpoint de calendario (trae de a un mes por llamada)
@@ -62,6 +62,25 @@ EMAIL_TO = os.environ.get("EMAIL_TO", "")
 EMAIL_PASSWORD = os.environ.get("EMAIL_PASSWORD", "")
 SMTP_HOST = os.environ.get("SMTP_HOST", "smtp.gmail.com")
 SMTP_PORT = int(os.environ.get("SMTP_PORT", "587"))
+
+# WhatsApp (opcional, vía CallMeBot — gratis, ver README)
+WHATSAPP_PHONE = os.environ.get("WHATSAPP_PHONE", "")
+WHATSAPP_APIKEY = os.environ.get("WHATSAPP_APIKEY", "")
+
+
+def send_whatsapp_alert(text):
+    if not (WHATSAPP_PHONE and WHATSAPP_APIKEY):
+        return
+    import requests
+    try:
+        requests.get(
+            "https://api.callmebot.com/whatsapp.php",
+            params={"phone": WHATSAPP_PHONE, "text": text, "apikey": WHATSAPP_APIKEY},
+            timeout=15,
+        )
+        print("[whatsapp] Alerta enviada.")
+    except Exception as e:
+        print(f"[whatsapp] Falló el envío: {e}")
 
 
 # ---------------------------------------------------------------------------
@@ -220,6 +239,50 @@ def save_results_json(all_offers, deals, path="results.json"):
     return payload
 
 
+def update_price_history(all_offers, path="history.json", max_entries=180):
+    """
+    Agrega un punto al historial de precios (uno por día que corre el
+    script), para poder graficar la tendencia con el tiempo. Guarda el
+    precio más barato encontrado en total y por cada origen.
+    Recorta a los últimos `max_entries` para que el archivo no crezca sin
+    límite (180 días ~ 6 meses de historial, de sobra para este proyecto).
+    """
+    if os.path.exists(path):
+        with open(path, "r", encoding="utf-8") as f:
+            history = json.load(f)
+    else:
+        history = []
+
+    today = date.today().isoformat()
+
+    if all_offers:
+        cheapest_overall = min(o["price"] for o in all_offers)
+        by_origin = {}
+        for o in all_offers:
+            origin = o.get("origin")
+            price = o.get("price")
+            if origin not in by_origin or price < by_origin[origin]:
+                by_origin[origin] = price
+    else:
+        cheapest_overall = None
+        by_origin = {}
+
+    # Si ya hay una entrada de hoy (ej. corriste el workflow manual dos
+    # veces), la reemplaza en vez de duplicarla.
+    history = [h for h in history if h.get("date") != today]
+    history.append({
+        "date": today,
+        "cheapest_overall": cheapest_overall,
+        "by_origin": by_origin,
+    })
+    history.sort(key=lambda h: h["date"])
+    history = history[-max_entries:]
+
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(history, f, ensure_ascii=False, indent=2)
+    print(f"Guardado {path} ({len(history)} punto(s) de historial).")
+
+
 def send_email_summary(deals):
     if not (EMAIL_FROM and EMAIL_TO and EMAIL_PASSWORD):
         print("[email] Variables EMAIL_FROM/EMAIL_TO/EMAIL_PASSWORD no configuradas, se omite el envío.")
@@ -274,10 +337,20 @@ def main():
     deals = filter_deals(all_offers)
 
     save_results_json(all_offers, deals)
+    try:
+        update_price_history(all_offers)
+    except Exception as e:
+        print(f"[aviso] No se pudo actualizar el historial: {e}")
     send_email_summary(deals)
 
     real_deals = [d for d in deals if not d.get("_above_target")]
     if real_deals:
+        top = real_deals[0]
+        send_whatsapp_alert(
+            f"✈️ Portugueando: {len(real_deals)} oferta(s) bajo €{MAX_PRICE_EUR_PER_PERSON}. "
+            f"La más barata: €{top['price']} {top.get('origin')}→{top.get('destination')} ({top.get('airline')}). "
+            f"Revisá tu email para el resto."
+        )
         print(f"\n{len(real_deals)} oferta(s) encontradas bajo €{MAX_PRICE_EUR_PER_PERSON}:")
         for d in real_deals:
             print(f"  €{d['price']} — {d.get('origin')} → {d.get('destination')} ({d.get('airline')})")

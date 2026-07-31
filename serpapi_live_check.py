@@ -27,7 +27,7 @@ from email.mime.multipart import MIMEMultipart
 # CONFIGURACIÓN
 # ---------------------------------------------------------------------------
 
-ORIGINS = ["OPO", "LIS", "MAD", "BCN"]
+ORIGINS = ["OPO", "LIS", "MAD", "BCN", "VGO", "SCQ"]
 DESTINATION = "EZE"   # SerpApi/Google Flights necesita un aeropuerto puntual, no "BUE".
                        # Consultamos solo EZE (no AEP también) para mantenernos
                        # dentro del plan gratis de SerpApi — no te importa cuál
@@ -40,12 +40,32 @@ CURRENCY = "EUR"
 SERPAPI_KEY = os.environ.get("SERPAPI_KEY", "")
 SERPAPI_URL = "https://serpapi.com/search"
 
+WHATSAPP_PHONE = os.environ.get("WHATSAPP_PHONE", "")
+WHATSAPP_APIKEY = os.environ.get("WHATSAPP_APIKEY", "")
+
+
+def send_whatsapp_alert(text):
+    if not (WHATSAPP_PHONE and WHATSAPP_APIKEY):
+        return
+    import requests
+    try:
+        requests.get(
+            "https://api.callmebot.com/whatsapp.php",
+            params={"phone": WHATSAPP_PHONE, "text": text, "apikey": WHATSAPP_APIKEY},
+            timeout=15,
+        )
+        print("[whatsapp] Alerta enviada.")
+    except Exception as e:
+        print(f"[whatsapp] Falló el envío: {e}")
+
 
 def sample_dates():
     """
-    Elige ~6 fechas repartidas dentro de tus dos ventanas preferidas
-    (16-28 feb 2027 y 1-15 mar 2027), para no gastar de más la cuota
-    gratis consultando cada día individualmente.
+    Elige fechas repartidas dentro de tus dos ventanas preferidas
+    (16-28 feb 2027 y 1-15 mar 2027). Con 6 orígenes ahora monitoreados,
+    usamos 2 fechas por ventana (inicio y fin) = 4 fechas totales, para
+    quedarnos en 6 orígenes × 4 fechas = 24 consultas/corrida, y no
+    pasarnos del plan gratis de SerpApi (250/mes) corriendo 2x/semana.
     """
     windows = [
         (date(2027, 2, 16), date(2027, 2, 28)),
@@ -53,12 +73,8 @@ def sample_dates():
     ]
     dates = []
     for start, end in windows:
-        span = (end - start).days
-        step = max(span // 2, 1)  # ~3 fechas por ventana
-        d = start
-        while d <= end:
-            dates.append(d.isoformat())
-            d += timedelta(days=step)
+        dates.append(start.isoformat())
+        dates.append(end.isoformat())
     return dates
 
 
@@ -66,7 +82,7 @@ def sample_dates():
 # BÚSQUEDA
 # ---------------------------------------------------------------------------
 
-def fetch_live_price(origin, destination, outbound_date):
+def fetch_live_price(origin, destination, outbound_date, retries=1):
     """Una consulta = un crédito de SerpApi. Solo ida (type=2)."""
     import requests
 
@@ -78,12 +94,24 @@ def fetch_live_price(origin, destination, outbound_date):
         "type": "2",          # solo ida
         "currency": CURRENCY,
         "adults": PASSENGERS,
+        "bags": 1,             # 1 carry-on por pasajero (SerpApi solo soporta carry-on, no valija despachada)
         "hl": "es",
         "api_key": SERPAPI_KEY,
     }
-    resp = requests.get(SERPAPI_URL, params=params, timeout=30)
-    resp.raise_for_status()
-    data = resp.json()
+
+    last_error = None
+    for attempt in range(retries + 1):
+        try:
+            resp = requests.get(SERPAPI_URL, params=params, timeout=45)
+            resp.raise_for_status()
+            data = resp.json()
+            break
+        except Exception as e:
+            last_error = e
+            if attempt < retries:
+                print(f"    -> timeout/error, reintentando...")
+                continue
+            raise last_error
 
     if "error" in data:
         raise RuntimeError(data["error"])
@@ -91,6 +119,9 @@ def fetch_live_price(origin, destination, outbound_date):
     google_flights_url = data.get("search_metadata", {}).get("google_flights_url", "")
     all_flights = data.get("best_flights", []) + data.get("other_flights", [])
 
+    # Deduplicar: Google Flights suele repetir el mismo itinerario ofrecido
+    # por varias agencias distintas (Gotogate, etc.) con el mismo precio.
+    seen = set()
     offers = []
     for f in all_flights:
         total_price = f.get("price")
@@ -100,6 +131,10 @@ def fetch_live_price(origin, destination, outbound_date):
         if not legs:
             continue
         first_leg = legs[0]
+        key = (first_leg.get("departure_airport", {}).get("time"), first_leg.get("airline"), total_price)
+        if key in seen:
+            continue
+        seen.add(key)
         offers.append({
             "origin": origin,
             "destination": destination,
@@ -137,16 +172,30 @@ def collect_all(demo=False):
     all_offers = []
     dates = sample_dates()
     calls_made = 0
+    total_calls = len(ORIGINS) * len(dates)
     for origin in ORIGINS:
         for d in dates:
+            calls_made += 1
+            print(f"[{calls_made}/{total_calls}] Consultando {origin} -> {DESTINATION} para {d}...")
             try:
                 offers = fetch_live_price(origin, DESTINATION, d)
                 all_offers.extend(offers)
-                calls_made += 1
+                print(f"    -> {len(offers)} vuelo(s) encontrados.")
             except Exception as e:
-                print(f"[aviso] Falló {origin}->{DESTINATION} {d}: {e}")
+                print(f"    -> [aviso] Falló: {e}")
     print(f"[info] {calls_made} consultas hechas a SerpApi en esta corrida.")
-    return all_offers
+
+    # Limpieza final por las dudas, por si el mismo vuelo aparece en más de
+    # una llamada (ej. fechas de muestra muy cercanas).
+    seen = set()
+    deduped = []
+    for o in all_offers:
+        key = (o["origin"], o["destination"], o["departure_at"], o["airline"], o["price_per_person"])
+        if key in seen:
+            continue
+        seen.add(key)
+        deduped.append(o)
+    return deduped
 
 
 def filter_deals(offers, max_price=MAX_PRICE_EUR_PER_PERSON):
@@ -221,6 +270,12 @@ def main():
         print(f"\n{len(deals)} oferta(s) EN VIVO bajo €{MAX_PRICE_EUR_PER_PERSON}:")
         for d in deals:
             print(f"  €{d['price_per_person']} — {d['origin']} → {d['destination']} ({d['airline']})")
+        top = deals[0]
+        send_whatsapp_alert(
+            f"🔴 EN VIVO Portugueando: {len(deals)} oferta(s) confirmadas bajo €{MAX_PRICE_EUR_PER_PERSON}. "
+            f"La más barata: €{top['price_per_person']} {top['origin']}→{top['destination']} ({top['airline']}), "
+            f"sale {top['depart_date']}. Revisá tu email/dashboard para el resto."
+        )
     else:
         print("Nada en vivo bajo el umbral en esta corrida.")
 
