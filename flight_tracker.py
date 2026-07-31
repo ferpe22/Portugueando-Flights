@@ -341,16 +341,16 @@ def main():
         update_price_history(all_offers)
     except Exception as e:
         print(f"[aviso] No se pudo actualizar el historial: {e}")
-    send_email_summary(deals)
+
+    # Email diario desactivado a pedido: Travelpayouts da datos de caché
+    # poco útiles en la práctica. Se sigue guardando results.json e
+    # history.json (dashboard + gráfico de tendencia), solo no se manda mail.
+    # send_email_summary(deals)
 
     real_deals = [d for d in deals if not d.get("_above_target")]
     if real_deals:
-        top = real_deals[0]
-        send_whatsapp_alert(
-            f"✈️ Portugueando: {len(real_deals)} oferta(s) bajo €{MAX_PRICE_EUR_PER_PERSON}. "
-            f"La más barata: €{top['price']} {top.get('origin')}→{top.get('destination')} ({top.get('airline')}). "
-            f"Revisá tu email para el resto."
-        )
+        # WhatsApp desactivado acá a pedido: solo interesa la alerta del
+        # chequeo en vivo (serpapi_live_check.py), no la de caché.
         print(f"\n{len(real_deals)} oferta(s) encontradas bajo €{MAX_PRICE_EUR_PER_PERSON}:")
         for d in real_deals:
             print(f"  €{d['price']} — {d.get('origin')} → {d.get('destination')} ({d.get('airline')})")

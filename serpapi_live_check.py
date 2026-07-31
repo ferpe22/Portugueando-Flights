@@ -7,7 +7,7 @@ datos en caché). Este script consulta Google Flights EN VIVO para una
 muestra de fechas dentro de tus ventanas preferidas, así te confirma
 precios reales del momento — no cacheados.
 
-Pensado para correr 2 veces por semana (no todos los días), para quedarse
+Pensado para correr 3 veces por semana (no todos los días), para quedarse
 cómodo dentro del plan gratis de SerpApi (250 búsquedas/mes).
 
 Uso:
@@ -61,21 +61,16 @@ def send_whatsapp_alert(text):
 
 def sample_dates():
     """
-    Elige fechas repartidas dentro de tus dos ventanas preferidas
-    (16-28 feb 2027 y 1-15 mar 2027). Con 6 orígenes ahora monitoreados,
-    usamos 2 fechas por ventana (inicio y fin) = 4 fechas totales, para
-    quedarnos en 6 orígenes × 4 fechas = 24 consultas/corrida, y no
-    pasarnos del plan gratis de SerpApi (250/mes) corriendo 2x/semana.
+    Elige 3 fechas repartidas dentro de tus dos ventanas preferidas
+    (16-28 feb 2027 y 1-15 mar 2027). Con 6 orígenes y 3 corridas/semana,
+    3 fechas × 6 orígenes = 18 consultas/corrida × ~13 corridas/mes = 234,
+    justo bajo el plan gratis de SerpApi (250/mes).
     """
-    windows = [
-        (date(2027, 2, 16), date(2027, 2, 28)),
-        (date(2027, 3, 1), date(2027, 3, 15)),
+    return [
+        "2027-02-16",  # inicio ventana feb
+        "2027-02-28",  # fin ventana feb
+        "2027-03-08",  # medio ventana mar
     ]
-    dates = []
-    for start, end in windows:
-        dates.append(start.isoformat())
-        dates.append(end.isoformat())
-    return dates
 
 
 # ---------------------------------------------------------------------------
