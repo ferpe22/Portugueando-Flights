@@ -2,7 +2,7 @@ name: Chequeo en vivo Google Flights
 
 on:
   schedule:
-    - cron: "0 9 * * 1,4"   # lunes y jueves, 9am UTC
+    - cron: "0 9 * * 1,3,5"   # lunes, miércoles y viernes, 9am UTC
   workflow_dispatch:
 
 jobs:
