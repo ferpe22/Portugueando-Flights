@@ -27,7 +27,7 @@ from email.mime.multipart import MIMEMultipart
 # CONFIGURACIÓN
 # ---------------------------------------------------------------------------
 
-ORIGINS = ["OPO", "LIS", "MAD", "BCN"]
+ORIGINS = ["OPO", "LIS", "MAD", "BCN", "VGO", "SCQ"]
 DESTINATION = "EZE"   # SerpApi/Google Flights necesita un aeropuerto puntual, no "BUE".
                        # Consultamos solo EZE (no AEP también) para mantenernos
                        # dentro del plan gratis de SerpApi — no te importa cuál
@@ -40,12 +40,32 @@ CURRENCY = "EUR"
 SERPAPI_KEY = os.environ.get("SERPAPI_KEY", "")
 SERPAPI_URL = "https://serpapi.com/search"
 
+WHATSAPP_PHONE = os.environ.get("WHATSAPP_PHONE", "")
+WHATSAPP_APIKEY = os.environ.get("WHATSAPP_APIKEY", "")
+
+
+def send_whatsapp_alert(text):
+    if not (WHATSAPP_PHONE and WHATSAPP_APIKEY):
+        return
+    import requests
+    try:
+        requests.get(
+            "https://api.callmebot.com/whatsapp.php",
+            params={"phone": WHATSAPP_PHONE, "text": text, "apikey": WHATSAPP_APIKEY},
+            timeout=15,
+        )
+        print("[whatsapp] Alerta enviada.")
+    except Exception as e:
+        print(f"[whatsapp] Falló el envío: {e}")
+
 
 def sample_dates():
     """
-    Elige ~6 fechas repartidas dentro de tus dos ventanas preferidas
-    (16-28 feb 2027 y 1-15 mar 2027), para no gastar de más la cuota
-    gratis consultando cada día individualmente.
+    Elige fechas repartidas dentro de tus dos ventanas preferidas
+    (16-28 feb 2027 y 1-15 mar 2027). Con 6 orígenes ahora monitoreados,
+    usamos 2 fechas por ventana (inicio y fin) = 4 fechas totales, para
+    quedarnos en 6 orígenes × 4 fechas = 24 consultas/corrida, y no
+    pasarnos del plan gratis de SerpApi (250/mes) corriendo 2x/semana.
     """
     windows = [
         (date(2027, 2, 16), date(2027, 2, 28)),
@@ -53,12 +73,8 @@ def sample_dates():
     ]
     dates = []
     for start, end in windows:
-        span = (end - start).days
-        step = max(span // 2, 1)  # ~3 fechas por ventana
-        d = start
-        while d <= end:
-            dates.append(d.isoformat())
-            d += timedelta(days=step)
+        dates.append(start.isoformat())
+        dates.append(end.isoformat())
     return dates
 
 
@@ -254,6 +270,12 @@ def main():
         print(f"\n{len(deals)} oferta(s) EN VIVO bajo €{MAX_PRICE_EUR_PER_PERSON}:")
         for d in deals:
             print(f"  €{d['price_per_person']} — {d['origin']} → {d['destination']} ({d['airline']})")
+        top = deals[0]
+        send_whatsapp_alert(
+            f"🔴 EN VIVO Portugueando: {len(deals)} oferta(s) confirmadas bajo €{MAX_PRICE_EUR_PER_PERSON}. "
+            f"La más barata: €{top['price_per_person']} {top['origin']}→{top['destination']} ({top['airline']}), "
+            f"sale {top['depart_date']}. Revisá tu email/dashboard para el resto."
+        )
     else:
         print("Nada en vivo bajo el umbral en esta corrida.")
 
