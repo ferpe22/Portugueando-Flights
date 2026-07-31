@@ -28,6 +28,7 @@ jobs:
         run: |
           git config user.name "flight-bot"
           git config user.email "bot@portugueando.local"
-          git add results.json history.json
+          git add results.json || true
+          git add history.json || true
           git commit -m "Actualiza resultados" || echo "sin cambios"
           git push

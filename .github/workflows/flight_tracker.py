@@ -337,7 +337,10 @@ def main():
     deals = filter_deals(all_offers)
 
     save_results_json(all_offers, deals)
-    update_price_history(all_offers)
+    try:
+        update_price_history(all_offers)
+    except Exception as e:
+        print(f"[aviso] No se pudo actualizar el historial: {e}")
     send_email_summary(deals)
 
     real_deals = [d for d in deals if not d.get("_above_target")]
