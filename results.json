@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-03",
+  "generated_at": "2026-08-04",
   "max_price_eur": 500,
   "passengers": 2,
   "total_offers_checked": 6,
@@ -19,7 +19,7 @@
     {
       "origin": "MAD",
       "destination": "BUE",
-      "price": 715,
+      "price": 716,
       "airline": "PU",
       "departure_at": "2027-02-19T23:10:00+01:00",
       "return_at": "2027-02-28T14:25:00-03:00",
