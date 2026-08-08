@@ -59,5 +59,13 @@
     "by_origin": {
       "MAD": 716
     }
+  },
+  {
+    "date": "2026-08-08",
+    "cheapest_overall": 828,
+    "by_origin": {
+      "LIS": 1016,
+      "MAD": 828
+    }
   }
 ]
