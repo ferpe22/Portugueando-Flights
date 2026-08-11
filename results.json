@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-10",
+  "generated_at": "2026-08-11",
   "max_price_eur": 500,
   "passengers": 2,
   "total_offers_checked": 6,
@@ -9,7 +9,7 @@
       "origin": "MAD",
       "destination": "BUE",
       "price": 828,
-      "airline": "IB",
+      "airline": "AA",
       "departure_at": "2027-03-10T16:30:00+01:00",
       "return_at": "2027-04-07T21:10:00-03:00",
       "stops": 1,
