@@ -1,6 +1,19 @@
 {
-  "generated_at": "2026-08-10",
+  "generated_at": "2026-08-12",
   "max_price_eur": 500,
   "source": "Google Flights (SerpApi, en vivo)",
-  "deals": []
+  "deals": [
+    {
+      "origin": "MAD",
+      "destination": "EZE",
+      "depart_date": "2027-02-28",
+      "price_per_person": 452.5,
+      "airline": "Avianca",
+      "departure_at": "2027-02-28 10:50",
+      "stops": 2,
+      "total_duration_min": 1865,
+      "verify_link": "https://www.google.com/travel/flights?hl=es&gl=us&curr=EUR&tfs=CBwQAhoeEgoyMDI3LTAyLTI4agcIARIDTUFEcgcIARIDRVpFQAFAAUgBagIQAXABmAEC&tfu=EgIIAQ",
+      "source": "Google Flights (en vivo)"
+    }
+  ]
 }
