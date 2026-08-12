@@ -91,5 +91,13 @@
       "LIS": 1016,
       "MAD": 828
     }
+  },
+  {
+    "date": "2026-08-12",
+    "cheapest_overall": 828,
+    "by_origin": {
+      "LIS": 1016,
+      "MAD": 828
+    }
   }
 ]
