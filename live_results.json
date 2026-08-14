@@ -1,18 +1,30 @@
 {
-  "generated_at": "2026-08-12",
+  "generated_at": "2026-08-14",
   "max_price_eur": 500,
   "source": "Google Flights (SerpApi, en vivo)",
   "deals": [
     {
-      "origin": "MAD",
+      "origin": "LIS",
       "destination": "EZE",
-      "depart_date": "2027-02-28",
-      "price_per_person": 452.5,
-      "airline": "Avianca",
-      "departure_at": "2027-02-28 10:50",
-      "stops": 2,
-      "total_duration_min": 1865,
-      "verify_link": "https://www.google.com/travel/flights?hl=es&gl=us&curr=EUR&tfs=CBwQAhoeEgoyMDI3LTAyLTI4agcIARIDTUFEcgcIARIDRVpFQAFAAUgBagIQAXABmAEC&tfu=EgIIAQ",
+      "depart_date": "2027-03-08",
+      "price_per_person": 474.5,
+      "airline": "Gol",
+      "departure_at": "2027-03-08 23:30",
+      "stops": 1,
+      "total_duration_min": 1745,
+      "verify_link": "https://www.google.com/travel/flights?hl=es&gl=us&curr=EUR&tfs=CBwQAhoeEgoyMDI3LTAzLTA4agcIARIDTElTcgcIARIDRVpFQAFAAUgBagIQAXABmAEC&tfu=EgIIAQ",
+      "source": "Google Flights (en vivo)"
+    },
+    {
+      "origin": "LIS",
+      "destination": "EZE",
+      "depart_date": "2027-03-08",
+      "price_per_person": 494.5,
+      "airline": "Gol",
+      "departure_at": "2027-03-08 23:30",
+      "stops": 1,
+      "total_duration_min": 920,
+      "verify_link": "https://www.google.com/travel/flights?hl=es&gl=us&curr=EUR&tfs=CBwQAhoeEgoyMDI3LTAzLTA4agcIARIDTElTcgcIARIDRVpFQAFAAUgBagIQAXABmAEC&tfu=EgIIAQ",
       "source": "Google Flights (en vivo)"
     }
   ]
