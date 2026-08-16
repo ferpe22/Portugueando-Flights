@@ -1,8 +1,8 @@
 {
-  "generated_at": "2026-08-15",
+  "generated_at": "2026-08-16",
   "max_price_eur": 500,
   "passengers": 2,
-  "total_offers_checked": 8,
+  "total_offers_checked": 7,
   "any_under_target": false,
   "deals": [
     {
@@ -19,7 +19,7 @@
     {
       "origin": "MAD",
       "destination": "BUE",
-      "price": 835,
+      "price": 833,
       "airline": "AA",
       "departure_at": "2027-02-25T16:20:00+01:00",
       "return_at": "2027-03-06T21:10:00-03:00",
