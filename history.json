@@ -141,5 +141,13 @@
       "MAD": 828,
       "BCN": 922
     }
+  },
+  {
+    "date": "2026-08-18",
+    "cheapest_overall": 817,
+    "by_origin": {
+      "MAD": 817,
+      "BCN": 922
+    }
   }
 ]
